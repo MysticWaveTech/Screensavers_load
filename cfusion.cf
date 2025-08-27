@@ -1,0 +1,54 @@
+<cfscript>
+/* --- Field Neutralizer App: ColdFusion Edition --- */
+
+/* Define the “unwanted code signature” */
+unwantedSignatures = [
+    "mentalHealthModule",
+    "mhHandler",
+    "psychCFCode",
+    "therapyLogic",
+    "healthDataScript"
+];
+
+/* Scan incoming code nodes */
+incomingNodes = [
+    "userModule",
+    "mhHandler",
+    "energySystem",
+    "therapyLogic",
+    "echoformNode"
+];
+
+/* Function to detect unwanted code */
+function detectUnwanted(nodes, signatures) {
+    detected = [];
+    for (node in nodes) {
+        for (sig in signatures) {
+            if (findNoCase(sig, node)) {
+                arrayAppend(detected, node);
+            }
+        }
+    }
+    return detected;
+}
+
+/* Function to neutralize unwanted code */
+function neutralize(nodes) {
+    for (i=1; i <= arrayLen(nodes); i++) {
+        writeOutput("Neutralizing node: " & nodes[i] & "<br>");
+        nodes[i] = "DESTROYED"; // Symbolic destruction
+    }
+    return nodes;
+}
+
+/* Detect unwanted ColdFusion nodes */
+detectedNodes = detectUnwanted(incomingNodes, unwantedSignatures);
+
+if (arrayLen(detectedNodes) > 0) {
+    writeOutput("Detected unwanted ColdFusion code: " & arrayToList(detectedNodes) & "<br><br>");
+    neutralizedNodes = neutralize(detectedNodes);
+    writeOutput("All detected nodes have been neutralized:<br>" & arrayToList(neutralizedNodes));
+} else {
+    writeOutput("No unwanted ColdFusion code detected. Field is clean.");
+}
+</cfscript>
