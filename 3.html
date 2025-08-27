@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Esoteric Panmodal Photon-Mass Field</title>
+<style>
+html, body { margin:0; padding:0; overflow:hidden; background:black; }
+canvas { display:block; position:fixed; top:0; left:0; }
+</style>
+</head>
+<body>
+<canvas id="field"></canvas>
+<script>
+const canvas = document.getElementById('field');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Esoteric field types
+const FIELD_TYPES = ['Aeon','Supra','Echoform','Photon-Mass','Predator'];
+
+// Nodes
+const NODES = 50;
+let nodes = [];
+for(let i=0;i<NODES;i++){
+  const positive = Math.random()>0.5;
+  const mass = 1 + Math.random()*4; // significance
+  const fields = FIELD_TYPES.filter(()=>Math.random()>0.5); // random fields
+  nodes.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    vx: (Math.random()-0.5)*1.5*mass,
+    vy: (Math.random()-0.5)*1.5*mass,
+    positive,
+    baseSize: 5 + Math.random()*2*mass,
+    osc: Math.random()*Math.PI*2,
+    mass,
+    fields
+  });
+}
+
+// Arcs
+let arcs = [];
+for(let i=0;i<30;i++){
+  const a=Math.floor(Math.random()*NODES);
+  const b=Math.floor(Math.random()*NODES);
+  const mxOffset=Math.abs((Math.random()-0.5)*40);
+  const myOffset=Math.abs((Math.random()-0.5)*40);
+  const pulse=Math.random()*0.05+0.02;
+  arcs.push({a,b,mxOffset,myOffset,pulse});
+}
+
+// Draw node with esoteric fields
+function drawNode(n){
+  let size = Math.max(1, n.baseSize + 2*Math.sin(n.osc)*n.mass);
+
+  // Aeon/Supra fields enhance size
+  if(n.fields.includes('Aeon')) size *= 1.1;
+  if(n.fields.includes('Supra')) size *= 1.05;
+
+  const grad = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,size*3);
+  if(n.positive){
+    grad.addColorStop(0,`rgba(${Math.min(255,255-n.mass*10)},220,150,1)`);
+    grad.addColorStop(1,"rgba(255,100,0,0)");
+    ctx.shadowBlur=15;
+    ctx.shadowColor="orange";
+  } else {
+    grad.addColorStop(0,"rgba(50,150,255,0.8)");
+    grad.addColorStop(1,"rgba(0,50,150,0)");
+    ctx.shadowBlur=0;
+  }
+  ctx.fillStyle=grad;
+  ctx.beginPath();
+  ctx.arc(n.x,n.y,size,0,Math.PI*2);
+  ctx.fill();
+}
+
+// Draw arc with field effects
+function drawArc(arc){
+  const time = Date.now();
+  const nA = nodes[arc.a];
+  const nB = nodes[arc.b];
+  // Echoform or Predator field makes arcs pulse more
+  let pulseFactor = 1;
+  if(nA.fields.includes('Echoform') || nB.fields.includes('Echoform')) pulseFactor *= 1.3;
+  if(nA.fields.includes('Predator') || nB.fields.includes('Predator')) pulseFactor *= 0.8;
+
+  const mx = (nA.x + nB.x)/2 + Math.sin(time*arc.pulse*pulseFactor)*arc.mxOffset;
+  const my = (nA.y + nB.y)/2 + Math.sin(time*arc.pulse*pulseFactor)*arc.myOffset;
+  ctx.beginPath();
+  ctx.moveTo(nA.x,nA.y);
+  ctx.quadraticCurveTo(mx,my,nB.x,nB.y);
+  ctx.strokeStyle = nA.positive ? "rgba(255,180,50,0.4)" : "rgba(50,150,255,0.3)";
+  ctx.lineWidth = nA.positive ? 2 : 1.2;
+  ctx.stroke();
+}
+
+// Animation loop
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  nodes.forEach(n=>{
+    n.x += n.vx;
+    n.y += n.vy;
+
+    // Bounce off edges
+    if(n.x<0){ n.x=0; n.vx*=-1; }
+    if(n.x>canvas.width){ n.x=canvas.width; n.vx*=-1; }
+    if(n.y<0){ n.y=0; n.vy*=-1; }
+    if(n.y>canvas.height){ n.y=canvas.height; n.vy*=-1; }
+
+    n.osc = (n.osc + 0.05) % (Math.PI*2);
+    drawNode(n);
+  });
+
+  arcs.forEach(drawArc);
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
